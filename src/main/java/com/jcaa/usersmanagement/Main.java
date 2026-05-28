@@ -1,6 +1,7 @@
 package com.jcaa.usersmanagement;
 
 import com.jcaa.usersmanagement.infrastructure.config.DependencyContainer;
+import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.cli.PersonalMilitarCli;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.cli.RangoMilitarCli;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.cli.UserManagementCli;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.cli.io.ConsoleIO;
@@ -21,10 +22,13 @@ public final class Main {
       console.println("\n  Seleccione el modulo:");
       console.println("  [1] Gestion de Usuarios");
       console.println("  [2] Gestion de Rangos Militares");
+      console.println("  [3] Gestion de Personal Militar");
       final int modulo = console.readInt("\n  Opcion: ");
 
       if (modulo == 2) {
         new RangoMilitarCli(container.rangoMilitarController(), console).start();
+      } else if (modulo == 3) {
+        new PersonalMilitarCli(container.personalMilitarController(), console).start();
       } else {
         new UserManagementCli(container.userController(), console).start();
       }

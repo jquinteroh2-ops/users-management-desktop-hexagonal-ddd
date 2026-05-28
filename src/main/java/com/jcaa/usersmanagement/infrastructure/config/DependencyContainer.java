@@ -1,18 +1,26 @@
 package com.jcaa.usersmanagement.infrastructure.config;
 
+import com.jcaa.usersmanagement.application.port.in.AscenderPersonalMilitarUseCase;
+import com.jcaa.usersmanagement.application.port.in.ConsultarMilitaresElegiblesParaAscensoUseCase;
 import com.jcaa.usersmanagement.application.port.in.CreateRangoMilitarUseCase;
 import com.jcaa.usersmanagement.application.port.in.CreateUserUseCase;
+import com.jcaa.usersmanagement.application.port.in.DarDeBajaPersonalMilitarUseCase;
 import com.jcaa.usersmanagement.application.port.in.DeleteRangoMilitarUseCase;
 import com.jcaa.usersmanagement.application.port.in.DeleteUserUseCase;
 import com.jcaa.usersmanagement.application.port.in.GetAllRangosMilitaresUseCase;
 import com.jcaa.usersmanagement.application.port.in.GetAllUsersUseCase;
 import com.jcaa.usersmanagement.application.port.in.GetRangoMilitarByIdUseCase;
 import com.jcaa.usersmanagement.application.port.in.GetUserByIdUseCase;
+import com.jcaa.usersmanagement.application.port.in.ListarPersonalPorRangoUseCase;
 import com.jcaa.usersmanagement.application.port.in.LoginUseCase;
+import com.jcaa.usersmanagement.application.port.in.RegistrarPersonalMilitarUseCase;
 import com.jcaa.usersmanagement.application.port.in.UpdateRangoMilitarUseCase;
 import com.jcaa.usersmanagement.application.port.in.UpdateUserUseCase;
+import com.jcaa.usersmanagement.application.service.AscenderPersonalMilitarService;
+import com.jcaa.usersmanagement.application.service.ConsultarMilitaresElegiblesParaAscensoService;
 import com.jcaa.usersmanagement.application.service.CreateRangoMilitarService;
 import com.jcaa.usersmanagement.application.service.CreateUserService;
+import com.jcaa.usersmanagement.application.service.DarDeBajaPersonalMilitarService;
 import com.jcaa.usersmanagement.application.service.DeleteRangoMilitarService;
 import com.jcaa.usersmanagement.application.service.DeleteUserService;
 import com.jcaa.usersmanagement.application.service.EmailNotificationService;
@@ -20,15 +28,19 @@ import com.jcaa.usersmanagement.application.service.GetAllRangosMilitaresService
 import com.jcaa.usersmanagement.application.service.GetAllUsersService;
 import com.jcaa.usersmanagement.application.service.GetRangoMilitarByIdService;
 import com.jcaa.usersmanagement.application.service.GetUserByIdService;
+import com.jcaa.usersmanagement.application.service.ListarPersonalPorRangoService;
 import com.jcaa.usersmanagement.application.service.LoginService;
+import com.jcaa.usersmanagement.application.service.RegistrarPersonalMilitarService;
 import com.jcaa.usersmanagement.application.service.UpdateRangoMilitarService;
 import com.jcaa.usersmanagement.application.service.UpdateUserService;
 import com.jcaa.usersmanagement.infrastructure.adapter.email.JavaMailEmailSenderAdapter;
 import com.jcaa.usersmanagement.infrastructure.adapter.email.SmtpConfig;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.config.DatabaseConfig;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.config.DatabaseConnectionFactory;
+import com.jcaa.usersmanagement.infrastructure.adapter.persistence.repository.PersonalMilitarRepositoryMySQL;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.repository.RangoMilitarRepositoryMySQL;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.repository.UserRepositoryMySQL;
+import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.controller.PersonalMilitarController;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.controller.RangoMilitarController;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.controller.UserController;
 
@@ -52,6 +64,7 @@ public final class DependencyContainer {
 
   private final UserController userController;
   private final RangoMilitarController rangoMilitarController;
+  private final PersonalMilitarController personalMilitarController;
 
   public DependencyContainer() {
     final AppProperties properties = new AppProperties();
@@ -100,6 +113,25 @@ public final class DependencyContainer {
     this.rangoMilitarController = new RangoMilitarController(
             createRangoUseCase, updateRangoUseCase, deleteRangoUseCase,
             getRangoByIdUseCase, getAllRangosUseCase);
+
+    // ── Personal Militar ───────────────────────────────────
+    final PersonalMilitarRepositoryMySQL personalRepository =
+            new PersonalMilitarRepositoryMySQL(connection);
+
+    final RegistrarPersonalMilitarUseCase registrarUseCase =
+            new RegistrarPersonalMilitarService(personalRepository, personalRepository, rangoRepository, validator);
+    final AscenderPersonalMilitarUseCase ascenderUseCase =
+            new AscenderPersonalMilitarService(personalRepository, rangoRepository, personalRepository, validator);
+    final DarDeBajaPersonalMilitarUseCase darDeBajaUseCase =
+            new DarDeBajaPersonalMilitarService(personalRepository, personalRepository, validator);
+    final ListarPersonalPorRangoUseCase listarPorRangoUseCase =
+            new ListarPersonalPorRangoService(personalRepository, validator);
+    final ConsultarMilitaresElegiblesParaAscensoUseCase elegiblesUseCase =
+            new ConsultarMilitaresElegiblesParaAscensoService(personalRepository);
+
+    this.personalMilitarController = new PersonalMilitarController(
+            registrarUseCase, ascenderUseCase, darDeBajaUseCase,
+            listarPorRangoUseCase, elegiblesUseCase);
   }
 
   public UserController userController() {
@@ -108,6 +140,10 @@ public final class DependencyContainer {
 
   public RangoMilitarController rangoMilitarController() {
     return rangoMilitarController;
+  }
+
+  public PersonalMilitarController personalMilitarController() {
+    return personalMilitarController;
   }
 
   private static Connection buildDatabaseConnection(final AppProperties properties) {
