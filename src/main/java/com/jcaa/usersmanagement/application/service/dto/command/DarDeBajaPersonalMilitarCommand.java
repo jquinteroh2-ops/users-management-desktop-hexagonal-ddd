@@ -1,4 +1,4 @@
-﻿package com.jcaa.usersmanagement.application.service.dto.command;
+package com.jcaa.usersmanagement.application.service.dto.command;
 
 import jakarta.validation.constraints.NotBlank;
 
